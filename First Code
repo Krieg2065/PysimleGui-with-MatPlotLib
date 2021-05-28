@@ -1,0 +1,96 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import PySimpleGUI as sg
+import os.path
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+
+df = pd.read_csv("C:/Users/ismai/Downloads/b/pandas-tutorial-master/data/tab.csv", sep=';')
+
+pd.options.display.max_rows = 8
+sg.theme('DarkBlue')
+fig = plt.figure(figsize=(12, 5), dpi=96)
+ax = fig.add_subplot(1, 1, 1)
+
+labels = df['Squadra']
+values = df['Pt']
+
+x = np.arange(len(values))
+width = 0.35  # the width of the bars
+
+fig, ax = plt.subplots()
+
+rects1 = ax.barh(labels,values)
+
+# Add some text for labels, title and custom x-axis tick labels, etc.
+ax.set_xticks(x)
+ax.set_xticklabels(labels, rotation=90)
+
+
+def draw_figure(canvas, figure, loc=(0, 0)):
+        figure_canvas_agg = FigureCanvasTkAgg(figure, canvas)
+        figure_canvas_agg.draw()
+        figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
+        return figure_canvas_agg
+    
+    
+fig = plt.gcf()  # if using Pyplot then get the figure from the plot
+figure_x, figure_y, figure_w, figure_h = fig.bbox.bounds
+ # ------------------------------- Beginning of GUI CODE -------------------------------
+ 
+
+file_list_column = [
+    [
+        sg.Text(""),
+        sg.Output(size=(80,20)),
+    ],
+]
+
+# For now will only show the name of the file that was chosen
+menu_column = [
+    [sg.Text("MENU",size=(30, 1), font='Lucida',justification='left')],
+    [sg.Button('info data frame')],
+    [sg.Button('data una posizione in classifica, avere la squadra che la occupa'), sg.InputText( key='key2')],
+    [sg.Button('dato il nome di una squadra, avere la posizione che occupa in classifica'), sg.InputText( key='key3')], 
+    [sg.Button('Mostra squadre'), sg.InputText( key='key4'),sg.InputText( key='key5')],
+    [sg.Button('Mostra perdenti')],
+    [sg.Button('Mostra vincenti')],
+    [sg.Button('Exit')],
+    
+]
+
+# ----- Full layout -----
+layout = [
+    [
+        sg.Column(file_list_column),
+        sg.Canvas(size=(figure_w, figure_h), key='-CANVAS-'),
+        sg.VSeperator(),
+        sg.Column(menu_column),
+    ]
+]
+
+window = sg.Window("Vaccinati", layout)
+
+while True:
+    event, values2 = window.read()
+    if event == "Exit" or event == sg.WIN_CLOSED:
+        break
+    elif  event == 'info data frame':
+        print(df)
+    elif  event == 'data una posizione in classifica, avere la squadra che la occupa':
+        print(df.loc[df['Pos.'] == int(values2.get("key2"))],"\n")
+    elif  event == 'dato il nome di una squadra, avere la posizione che occupa in classifica':
+        c = df.loc[df['Squadra'] == values2.get("key3")]
+        print(c["Pos."])
+    elif  event == 'Mostra squadre':
+        c = df.loc[df['Squadra'] == values.get("key3")]
+        pun = df[(df['Pt'] <= int(values2.get("key4"))) & (df['Pt'] >= int(values2.get("key5")))]
+        print(pun["Squadra"])
+    elif  event == 'Mostra perdenti':
+        perdenti = df.loc[df['Ultime 5'] == "P P P P P"]
+        print(perdenti["Squadra"])
+    elif  event == 'Mostra vincenti':
+       fig_photo = draw_figure(window['-CANVAS-'].TKCanvas, fig)
+
+window.refresh()
+window.close()
